@@ -8,7 +8,7 @@ from time import sleep
 import cairosvg
 
 
-__version__ = "0.0.3"
+__version__ = "0.0.5"
 
 """
 
@@ -46,7 +46,7 @@ class PygameTools:
         self.contrast = 1.5
         self.image_in = None    # original / first
         self.image_out = None   # edited   / second
-        self.delay = 0.05
+        self.delay = 0.01
         self.svgx = 0
         self.matrix_ai_face = True
 
@@ -66,10 +66,11 @@ class PygameTools:
     def print_info(self):
         print("ver.", p.ver)
         print(f"window setup: {self.width}x{self.height}")
+        ## print(f"display.list_modes:",p.display.list_modes())
 
 
     def set_background_img(self, img_path="background.png"):
-        self.background_image = p.image.load(img_path)
+        self.background_image = self.load_image(img_path) # p.image.load(img_path)
         self.background_image = p.transform.scale(self.background_image, (self.width, self.height))
 
 
@@ -79,7 +80,7 @@ class PygameTools:
         print(sorted_files)
 
 
-    def create_svg(self,x=0,y=0, alpha=128):
+    def create_svg(self,x=0,y=0, alpha=32):
         svg_file = 'image.svg'
         angle = 45
         #renderPM.drawToFile(drawing, "image.png", fmt="PNG")
@@ -98,10 +99,18 @@ class PygameTools:
 
     def img_matrix(self,matrix_image,aplha=128, size_mx=(256,256)):        
         matrix_image.set_alpha(aplha)
-        matrix_image = p.transform.scale(matrix_image , (32, 32)) 
+        matrix_image = p.transform.scale(matrix_image , (64,64)) # 32,32
         matrix_image = p.transform.scale(matrix_image , (size_mx))
         return matrix_image
 
+
+    def img_data(self,image):
+        matrix_image = p.transform.scale(image , (32,32)) 
+        print("-"*39)
+        print("test bytes", p.image.tobytes(matrix_image, "RGB"))
+        print("-"*39)
+        print("test string", p.image.tostring(matrix_image, "RGB"))
+        
 
     def img_to_gray(self, input_image):
         width, height = input_image.get_size()
@@ -191,11 +200,6 @@ class PygameTools:
 
 
     def draw_edit_img(self):
-        #p.draw.rect(self.screen, BLACK, (0, 0, self.width, 390))
-        opacity=128
-        rect_surface = p.Surface((self.width, 390), p.SRCALPHA)
-        rect_surface.fill((0, 0, 0, opacity))  # Set the fill color with opacity
-        self.screen.blit(rect_surface, (0, 0))
 
         # draw_text(f"icon {icon_w}x{icon_h} | {image_path}",x0, y0 -30, SILVER2)
         # window.fill((255, 255, 255))  # Clear the window content
@@ -211,8 +215,6 @@ class PygameTools:
             self.screen.blit(self.image_in, (630,100))
             self.screen.blit(self.image_out, (390,100))
 
-            self.image_mx = self.img_matrix(self.image_in,self.alpha,(320,320))    
-            self.screen.blit(self.image_mx, (50,100))
             
             #image_nbit = self.image_in.convert(16)
             #self.screen.blit(image_nbit, (700,100))
@@ -224,7 +226,39 @@ class PygameTools:
             
         #draw_input_field()
         ##p.display.flip()
-        
+    
+
+    def draw_layer_back(self):
+        self.screen.fill(BLACK)
+        if self.background_image:
+            self.screen.blit(self.background_image, (0, 0))
+                #p.draw.rect(self.screen, BLACK, (0, 0, self.width, 390))
+        opacity_over_bg=128
+        rect_surface = p.Surface((self.width, 390), p.SRCALPHA)
+        rect_surface.fill((0, 0, 0, opacity_over_bg))  # Set the fill color with opacity
+        self.screen.blit(rect_surface, (0, 0))
+
+
+    def draw_matrix_img(self, new = False):
+        if new:
+            ri = random.randint(0, len(self.files)-1) # random index
+            iname = self.files[ri]
+            self.label = iname
+            print(ri,len(self.files), iname)
+            self.image_input_path = self.images_source+"/"+iname
+            
+            self.image_in = self.load_image(self.image_input_path)
+        self.image_mx = self.img_matrix(self.image_in,self.alpha,(320,320))    
+        self.screen.blit(self.image_mx, (50,100))
+    
+
+    def draw_layer_main(self):
+        self.draw_input_field()
+        self.draw_edit_img()            
+        self.draw_text(self.label,10,20)
+        self.draw_text2(self.head,self.width/2,20)
+        self.draw_status()
+                            
 
     def run(self):
         running = True
@@ -328,29 +362,23 @@ class PygameTools:
                             self.input_text += event.unicode
                     
             # ========================== main seq, ===================
-            self.screen.fill(BLACK)
-            if self.background_image:
-                self.screen.blit(self.background_image, (0, 0))
-            self.draw_input_field()
-            self.draw_edit_img()            
-            self.draw_text(self.label,10,20)
-            self.draw_text2(self.head,self.width/2,20)
-            self.draw_status()
-            self.svgx +=1
-            self.alpha +=8
-            if self.alpha>255:
-                if self.matrix_ai_face:
-                    sleep(2)
-                    self.alpha = 32
-                    ri = random.randint(0, len(self.files)-1) # random index
-                    print(ri,len(self.files))
-                    iname = self.files[ri]
-                    self.label = iname
-                    self.image_input_path = self.images_source+"/"+iname
+            self.draw_layer_back()
+            self.draw_layer_main()
 
-            self.create_svg(self.svgx,200)
+            self.alpha +=2
+            if self.alpha>255:
+                self.alpha = 128
+                #sleep(1)
+                self.draw_matrix_img(True)
+            else:
+                if self.matrix_ai_face:
+                    self.draw_matrix_img()
+
+            self.svgx +=2
+            self.create_svg(self.svgx,32)
             if self.svgx > self.width:
                 self.svgx = 0
+
             p.display.flip()
             if self. timer:
                 self.clock.tick(60)

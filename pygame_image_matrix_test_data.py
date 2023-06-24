@@ -14,11 +14,10 @@ print(pt.print_img_info())
 
 pt.matrix_ai_face = True
 
-##pt.set_background_img("img_ai/wai1.png")
-pt.set_background_img()
-#external_library = External_pgt(pt)
-#external_library.external_test()
+load_img = pt.load_image(pt.image_input_path)
+test_image = pt.img_to_gray(load_img)
+pt.img_data(test_image)
 
-pt.import_images()
-
-pt.run()
+## pt.set_background_img()
+## pt.import_images()
+## pt.run()
