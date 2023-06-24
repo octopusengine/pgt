@@ -6,9 +6,9 @@ from time import sleep
 #from svglib.svglib import svg2rlg
 #from reportlab.graphics import renderPM
 import cairosvg
+import qrcode
 
-
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 """
 
@@ -27,6 +27,7 @@ COLOR2 = (0, 128, 0)
 
 class PygameTools:
     def __init__(self, window_width=640, window_height=480):
+        self.p = p
         self.width = window_width
         self.height = window_height
         self.screen = p.display.set_mode((window_width, window_height))
@@ -47,6 +48,8 @@ class PygameTools:
         self.image_in = None    # original / first
         self.image_out = None   # edited   / second
         self.delay = 0.01
+        self.svg = True
+        self.qr = True
         self.svgx = 0
         self.matrix_ai_face = True
 
@@ -80,7 +83,18 @@ class PygameTools:
         print(sorted_files)
 
 
-    def create_svg(self,x=0,y=0, alpha=32):
+    def render_qrcode(self, data = "Hello, World!"):
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=3, border=4)
+        qr.add_data(data)
+        qr.make(fit=True)
+        qr_image = qr.make_image(fill_color="black", back_color="white")
+
+        image_size = qr_image.size
+        qr_image = p.image.fromstring(qr_image.tobytes(), image_size, "RGBA")
+        return qr_image
+
+
+    def render_svg(self,x=0,y=0, alpha=32):
         svg_file = 'image.svg'
         angle = 45
         #renderPM.drawToFile(drawing, "image.png", fmt="PNG")
@@ -91,26 +105,33 @@ class PygameTools:
         image.set_alpha(alpha)
         image = p.transform.scale(image , (32, 32))
         image2 = p.transform.scale(image , (320, 320))
-        ##image.convert.
         self.screen.blit(image, (x, y))
         self.screen.blit(image2, (x, y))
         return image
 
 
-    def img_matrix(self,matrix_image,aplha=128, size_mx=(256,256)):        
-        matrix_image.set_alpha(aplha)
-        matrix_image = p.transform.scale(matrix_image , (64,64)) # 32,32
-        matrix_image = p.transform.scale(matrix_image , (size_mx))
+    def img_matrix(self, matrix_image, alpha=128, size_mx=(32,32),size_out=(256,256)): 
+        if alpha>0:       
+            matrix_image.set_alpha(alpha)
+        matrix_image = p.transform.scale(matrix_image , (size_mx)) # 32,32
+        matrix_image = p.transform.scale(matrix_image , (size_out))
         return matrix_image
 
 
-    def img_data(self,image):
-        matrix_image = p.transform.scale(image , (32,32)) 
-        print("-"*39)
-        print("test bytes", p.image.tobytes(matrix_image, "RGB"))
-        print("-"*39)
-        print("test string", p.image.tostring(matrix_image, "RGB"))
-        
+    def img_data(self,image, format="RGB"):
+        """
+        image_in: img_ai/wai1_1.png (262x261)
+        flags: 65536, bit size: 32
+        RGB 262x261 205146
+        """
+        try:
+            width, height = image.get_size()
+            s = p.image.tobytes(image, format)
+            print(format, f"{width}x{height}", len(s))
+            return s
+        except Exception as e:
+            print(f"img_data Err: {e}")
+
 
     def img_to_gray(self, input_image):
         width, height = input_image.get_size()
@@ -215,7 +236,9 @@ class PygameTools:
             self.screen.blit(self.image_in, (630,100))
             self.screen.blit(self.image_out, (390,100))
 
-            
+            ##qr_img = self.render_qrcode()
+            ##self.screen.blit(qr_img, (30,100))
+
             #image_nbit = self.image_in.convert(16)
             #self.screen.blit(image_nbit, (700,100))
             #return p.image.tostring(image_8bit, "P") # RGB ok,
@@ -223,9 +246,6 @@ class PygameTools:
             ##self.screen.blit(p.transform.scale(image_edit, (current_width, current_height)), (window_width/2+100, y0))
         except Exception as e:
             print(f"draw_edit_img Err: {e}")
-            
-        #draw_input_field()
-        ##p.display.flip()
     
 
     def draw_layer_back(self):
@@ -248,8 +268,8 @@ class PygameTools:
             self.image_input_path = self.images_source+"/"+iname
             
             self.image_in = self.load_image(self.image_input_path)
-        self.image_mx = self.img_matrix(self.image_in,self.alpha,(320,320))    
-        self.screen.blit(self.image_mx, (50,100))
+        self.image_mx = self.img_matrix(self.image_in,self.alpha,(32,32),(320,320))    
+        self.screen.blit(self.image_mx, (35,100))
     
 
     def draw_layer_main(self):
@@ -304,8 +324,6 @@ class PygameTools:
                     
                     elif event.key == p.K_n and p.key.get_mods() & p.KMOD_CTRL:
                         img_noise()
-                        draw_edit_img()
-
 
                     elif event.key == p.K_z and p.key.get_mods() & p.KMOD_CTRL:
                         self.resize +=.5
@@ -347,8 +365,6 @@ class PygameTools:
                         #draw_status(f"input text: {input_text}")
                         if len(self.input_text) > 1:
                             #new_file = f"{path}/{input_text}.png"
-                            #draw_status2(new_file)
-                            #image_path = new_file
                             img_name = self.input_text
                             print(self.input_text)
                             self.status = self.input_text
@@ -373,11 +389,11 @@ class PygameTools:
             else:
                 if self.matrix_ai_face:
                     self.draw_matrix_img()
-
-            self.svgx +=2
-            self.create_svg(self.svgx,32)
-            if self.svgx > self.width:
-                self.svgx = 0
+            if self.svg:
+                self.svgx +=2
+                self.render_svg(self.svgx,32)
+                if self.svgx > self.width:
+                    self.svgx = 0
 
             p.display.flip()
             if self. timer:

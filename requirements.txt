@@ -1,0 +1,6 @@
+python-dotenv
+pbkdf2
+pygame
+pypng
+pyqrcode
+
