@@ -9,7 +9,7 @@ import cairosvg
 import qrcode
 from io import BytesIO
 
-__version__ = "0.0.7"
+__version__ = "0.0.8"
 
 """
 
@@ -49,12 +49,12 @@ class PygameTools:
         self.image_in = None    # original / first
         self.image_out = None   # edited   / second
         self.delay = 0.01
+        self.drawmatrix = False
         self.drawedit = False
-        self.drawsvg = True
+        self.drawsvg = False
         self.drawqr = False
         self.qrdata = "octopusengine test"
         self.svgx = 0
-        self.drawmatrix = False
 
         self.mouse_button_pressed = False
         p.init()
@@ -121,10 +121,15 @@ class PygameTools:
         return image
 
 
-    def img_matrix(self, image, alpha=128, size_mx=(32,32),size_out=(256,256)): 
-        #if alpha>0:       
-        #    matrix_image.set_alpha(alpha)
-        matrix_image = p.transform.scale(image , (size_mx)) # 32,32
+    def img_matrix(self, matrix_image, alpha=128, size_mx=(32,32),size_out=(256,256)): 
+        if alpha>0:       
+            matrix_image.set_alpha(alpha)
+        
+        rx = random.randint(0, 5)
+        if rx>2:
+            matrix_image = p.transform.scale(matrix_image , (size_mx)) # 32,32
+        else:
+            matrix_image = p.transform.scale(matrix_image , (64,64))
         matrix_image = p.transform.scale(matrix_image , (size_out))
         return matrix_image
 
@@ -341,8 +346,8 @@ class PygameTools:
             #original_width, original_height = self.image_in.get_size()
             #current_width, current_height = original_width * self.resize, original_height * self.resize
             
-            self.image_out = self.img_to_gray(self.image_in) # image edit
-            ##self.image_out = self.img_add_noise(self.image_in, 32)
+            #x self.image_out = self.img_to_gray(self.image_in) # image edit
+            self.image_out = self.img_add_noise(self.image_in, 32)
             ###self.image_out = self.img_to_onebit(self.image_in)
             #self.image_out = self.img_reduce(self.image_in,(0,0,255))
             #self.image_out = p.transform.scale(self.image_out , (current_width, current_height))
@@ -380,7 +385,9 @@ class PygameTools:
             self.image_input_path = self.images_source+"/"+iname
             
             self.image_in = self.img_load(self.image_input_path)
-        self.image_mx = self.img_matrix(self.image_in,self.alpha,(32,32),(320,320))    
+
+        self.image_mx = self.img_add_noise(self.image_in, 32)
+        self.image_mx = self.img_matrix(self.image_mx,self.alpha,(32,32),(320,320))    
         self.screen.blit(self.image_mx, (35,100))
     
 
@@ -388,7 +395,7 @@ class PygameTools:
         self.draw_input_field()
         if self.drawedit:
             self.draw_img_edit() 
-            #self.draw_img_in()
+            self.draw_img_in()
         if self.drawqr:
             self.draw_qr()
         self.draw_text(self.label,10,20)
