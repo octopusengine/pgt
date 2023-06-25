@@ -14,7 +14,6 @@ pt.drawqr = True
 ## pt.print_info()
 ## print(pt.print_img_info())
 pt.set_background_img()
-pt.matrix_ai_face = False
 ## pt.import_images()
 
 qr_img = pt.render_qrcode("octopusengine example 123")
