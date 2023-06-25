@@ -7,8 +7,9 @@ from time import sleep
 #from reportlab.graphics import renderPM
 import cairosvg
 import qrcode
+from io import BytesIO
 
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 
 """
 
@@ -48,8 +49,10 @@ class PygameTools:
         self.image_in = None    # original / first
         self.image_out = None   # edited   / second
         self.delay = 0.01
-        self.svg = True
-        self.qr = True
+        self.drawedit = True
+        self.drawsvg = True
+        self.drawqr = False
+        self.qrdata = "octopusengine test"
         self.svgx = 0
         self.matrix_ai_face = True
 
@@ -58,7 +61,7 @@ class PygameTools:
         #window = p.display.set_mode((window_width, window_height))
         p.display.set_caption(f"py_game_tool (ver. {__version__})")
 
-        font_size, font_size1, font_size2 = 20, 50, 32
+        font_size, font_size1, font_size2 = 18, 39, 25
         self.font = p.font.SysFont("Grand9K Pixel", font_size)
         self.font1 = p.font.SysFont("Grand9K Pixel", font_size1)
         self.font2 = p.font.SysFont("Grand9K Pixel", font_size2)
@@ -73,7 +76,7 @@ class PygameTools:
 
 
     def set_background_img(self, img_path="background.png"):
-        self.background_image = self.load_image(img_path) # p.image.load(img_path)
+        self.background_image = self.img_load(img_path) # p.image.load(img_path)
         self.background_image = p.transform.scale(self.background_image, (self.width, self.height))
 
 
@@ -83,15 +86,23 @@ class PygameTools:
         print(sorted_files)
 
 
-    def render_qrcode(self, data = "Hello, World!"):
-        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=3, border=4)
-        qr.add_data(data)
+    def render_qrcode(self,data = "",box=10):
+        if len(data)>1:
+            self.qrdata = data
+        qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_H, box_size=box, border=2)
+        qr.add_data(self.qrdata)
         qr.make(fit=True)
         qr_image = qr.make_image(fill_color="black", back_color="white")
 
-        image_size = qr_image.size
-        qr_image = p.image.fromstring(qr_image.tobytes(), image_size, "RGBA")
-        return qr_image
+        # Convert the QR code image to a byte array
+        byte_array = BytesIO()
+        qr_image.save(byte_array, format="PNG")
+        byte_array.seek(0)
+
+        # Create a Pygame surface from the byte array
+        pygame_image = p.image.load_extended(byte_array)
+        draw_image = p.transform.scale(pygame_image , (310,310))
+        return draw_image
 
 
     def render_svg(self,x=0,y=0, alpha=32):
@@ -167,17 +178,17 @@ class PygameTools:
         self.draw_text(self.status, xi,yi)
 
 
-    def load_image(self, img_path):
+    def img_load(self, img_path):
         try:
             image = p.image.load(img_path)
             return image
         #except p.error:
         except Exception as e:
-            print(f"load_image Err: {e}")
+            print(f"img_load Err: {e}")
 
 
     def print_img_info(self):
-        self.image_in = self.load_image(self.image_input_path)
+        self.image_in = self.img_load(self.image_input_path)
         width, height = self.image_in.get_size()
         #mode = self.image_in.get_mode()
         flags = self.image_in.get_flags()
@@ -202,13 +213,14 @@ class PygameTools:
     """
      
 
-    def save_image(self, save_path):
+    def img_save(self, image, save_path="images/temp.png"):
+        print(save_path)
         try:
-            p.image.save(self.image_out, save_path)
-            print("Obrázek byl úspěšně uložen.")
+            p.image.save(image, save_path)
+            print("Image was successfully saved.")
         except p.error:
-            print("Nepodařilo se uložit obrázek.")
-
+            print("Failed to save the image.")
+        
 
     def draw_input_field(self):
         a = 15
@@ -220,13 +232,17 @@ class PygameTools:
         self.screen.blit(text_surface, (xi+5, yi-3))
 
 
-    def draw_edit_img(self):
+    def draw_qr(self):
+        qr_img = self.render_qrcode()
+        self.screen.blit(qr_img, (30,100))
 
+
+    def draw_edit_img(self):
         # draw_text(f"icon {icon_w}x{icon_h} | {image_path}",x0, y0 -30, SILVER2)
         # window.fill((255, 255, 255))  # Clear the window content
                 
         try:
-            self.image_in = self.load_image(self.image_input_path)
+            self.image_in = self.img_load(self.image_input_path)
             original_width, original_height = self.image_in.get_size()
             current_width, current_height = original_width * self.resize, original_height * self.resize
             
@@ -235,9 +251,6 @@ class PygameTools:
 
             self.screen.blit(self.image_in, (630,100))
             self.screen.blit(self.image_out, (390,100))
-
-            ##qr_img = self.render_qrcode()
-            ##self.screen.blit(qr_img, (30,100))
 
             #image_nbit = self.image_in.convert(16)
             #self.screen.blit(image_nbit, (700,100))
@@ -267,14 +280,17 @@ class PygameTools:
             print(ri,len(self.files), iname)
             self.image_input_path = self.images_source+"/"+iname
             
-            self.image_in = self.load_image(self.image_input_path)
+            self.image_in = self.img_load(self.image_input_path)
         self.image_mx = self.img_matrix(self.image_in,self.alpha,(32,32),(320,320))    
         self.screen.blit(self.image_mx, (35,100))
     
 
     def draw_layer_main(self):
         self.draw_input_field()
-        self.draw_edit_img()            
+        if self.drawedit:
+            self.draw_edit_img() 
+        if self.drawqr:
+            self.draw_qr()
         self.draw_text(self.label,10,20)
         self.draw_text2(self.head,self.width/2,20)
         self.draw_status()
@@ -315,12 +331,12 @@ class PygameTools:
 
                 elif event.type == p.KEYDOWN:
                     if event.key == p.K_l and p.key.get_mods() & p.KMOD_CTRL:
-                        self.image_in = self.load_image(self.image_input_path)
+                        self.image_in = self.img_load(self.image_input_path)
                         self.draw_edit_img()
 
                     elif event.key == p.K_s and p.key.get_mods() & p.KMOD_CTRL:
                         #img = draw_edit_img()
-                        self.save_imgage()
+                        self.img_save(self.image_out)
                     
                     elif event.key == p.K_n and p.key.get_mods() & p.KMOD_CTRL:
                         img_noise()
@@ -385,11 +401,12 @@ class PygameTools:
             if self.alpha>255:
                 self.alpha = 128
                 #sleep(1)
-                self.draw_matrix_img(True)
+                if self.matrix_ai_face:
+                    self.draw_matrix_img(True)
             else:
                 if self.matrix_ai_face:
                     self.draw_matrix_img()
-            if self.svg:
+            if self.drawsvg:
                 self.svgx +=2
                 self.render_svg(self.svgx,32)
                 if self.svgx > self.width:

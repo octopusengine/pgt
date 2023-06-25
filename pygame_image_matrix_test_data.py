@@ -14,7 +14,7 @@ print(pt.print_img_info())
 pe.external_test()
 
 # pt.matrix_ai_face = False
-load_img = pt.load_image(pt.image_input_path)
+load_img = pt.img_load(pt.image_input_path)
 test_img = pt.img_to_gray(load_img)
 matrix_img = pt.img_matrix(test_img, alpha=128, size_mx=(32,32),size_out=(32,32))
 s =pt.img_data(matrix_img) # RGB 32x32 3072 / 1024 3B/px = 24 bit
@@ -35,5 +35,6 @@ image = matrix_img
 #image_8bit = pt.p.Surface(image.get_size(), pt.p.SRCALPHA, 8)
 #image_8bit.blit(image, (0, 0))
 image_8bit = image.convert()
+pt.img_save(image_8bit)
 
 s = pt.img_data(image_8bit) # RGB 32x32 3072 / 1024 3B/px = 24 bit
