@@ -49,12 +49,12 @@ class PygameTools:
         self.image_in = None    # original / first
         self.image_out = None   # edited   / second
         self.delay = 0.01
-        self.drawedit = True
+        self.drawedit = False
         self.drawsvg = True
         self.drawqr = False
         self.qrdata = "octopusengine test"
         self.svgx = 0
-        self.matrix_ai_face = True
+        self.drawmatrix = False
 
         self.mouse_button_pressed = False
         p.init()
@@ -121,13 +121,88 @@ class PygameTools:
         return image
 
 
-    def img_matrix(self, matrix_image, alpha=128, size_mx=(32,32),size_out=(256,256)): 
-        if alpha>0:       
-            matrix_image.set_alpha(alpha)
-        matrix_image = p.transform.scale(matrix_image , (size_mx)) # 32,32
+    def img_matrix(self, image, alpha=128, size_mx=(32,32),size_out=(256,256)): 
+        #if alpha>0:       
+        #    matrix_image.set_alpha(alpha)
+        matrix_image = p.transform.scale(image , (size_mx)) # 32,32
         matrix_image = p.transform.scale(matrix_image , (size_out))
         return matrix_image
 
+
+    def img_add_noise(self, image, intensity):
+        # Load the image
+        img_surface = image # p.image.load(image).convert_alpha()
+
+        # Get the width and height of the image
+        width = img_surface.get_width()
+        height = img_surface.get_height()
+
+        # Iterate over each pixel in the image
+        for x in range(width):
+            for y in range(height):
+                # Get the pixel color at (x, y)
+                color = img_surface.get_at((x, y))
+
+                # Add random noise to each color channel
+                r = min(255, max(0, color.r + random.randint(-intensity, intensity)))
+                g = min(255, max(0, color.g + random.randint(-intensity, intensity)))
+                b = min(255, max(0, color.b + random.randint(-intensity, intensity)))
+
+                # Set the modified pixel color
+                img_surface.set_at((x, y), (r, g, b))
+
+        return img_surface
+    
+
+    def img_reduce(self, image, red_col = (252,252,252)):
+        # Load the image
+        img_surface = image # p.image.load(image).convert_alpha()
+
+        # Get the width and height of the image
+        width = img_surface.get_width()
+        height = img_surface.get_height()
+
+        # Iterate over each pixel in the image
+        for x in range(width):
+            for y in range(height):
+                # Get the pixel color at (x, y)
+                color = img_surface.get_at((x, y))
+                #b = min(255, max(0, color.b + random.randint(-intensity, intensity)))
+                r, g, b, a  = color
+                if r > red_col[0]: r = red_col[0]
+                if g > red_col[1]: g = red_col[1]
+                if b > red_col[2]: b = red_col[2]
+                
+                img_surface.set_at((x, y), (r, g, b))
+
+        return img_surface
+
+
+    def img_to_onebit(self, image):
+        # Load the image
+        img_surface = image # p.image.load(image).convert_alpha()
+
+        onebit_surface = p.Surface(img_surface.get_size(), p.SRCALPHA, 1)
+
+        # Iterate over each pixel in the image
+        for x in range(img_surface.get_width()):
+            for y in range(img_surface.get_height()):
+                # Get the pixel color at (x, y)
+                color = img_surface.get_at((x, y))
+
+                # Calculate the grayscale value of the pixel
+                grayscale = (color.r + color.g + color.b) // 3
+
+                # Set the color of the pixel in the one-bit surface based on the grayscale value
+                if grayscale < 128:
+                    onebit_surface.set_at((x, y), p.Color('black'))
+                else:
+                    onebit_surface.set_at((x, y), p.Color('white'))
+
+        # Convert the image to black and white using a threshold of 128
+        #img_surface.convert_threshold(128, p.Color('black'), p.Color('white'), (0, 0, 0, 255), (255, 255, 255, 255))
+        return onebit_surface
+        
 
     def img_data(self,image, format="RGB"):
         """
@@ -146,19 +221,30 @@ class PygameTools:
 
     def img_to_gray(self, input_image):
         width, height = input_image.get_size()
-        grayscale_image = p.Surface((width, height))
+        img_surface = input_image
+        #grayscale_image = p.Surface((width, height))
+        # Convert the image to grayscale
+        ##grayscale_surface = p.Surface(img_surface.get_size()).convert_alpha()
+        grayscale_surface = self.img_to_gray(img_surface)
 
-        for x in range(width):
-            for y in range(height):
-                pixel_color = input_image.get_at((x, y))
-                grayscale = sum(pixel_color[:3]) // 3  # Průměr hodnot RGB kanálů
+        ###p.transform.threshold(grayscale_surface, img_surface, (0, 0, 0), (255, 255, 255), (128, 128, 128), 0, (0, 0, 0, 255))
 
-                # zmena kontrastu
-                contrasted_gray = int((grayscale - 128) * self.contrast + 128)
-                # Omezení hodnot na rozsah 0-255
-                contrasted_gray = max(0, min(255, contrasted_gray))
-                grayscale_image.set_at((x, y), (contrasted_gray, contrasted_gray, contrasted_gray))
-        return grayscale_image
+        # Create a new surface with one-bit color depth
+        onebit_surface = p.Surface(img_surface.get_size(), p.SRCALPHA, 1)
+
+        # Iterate over each pixel in the grayscale surface
+        for x in range(grayscale_surface.get_width()):
+            for y in range(grayscale_surface.get_height()):
+                # Get the pixel color at (x, y)
+                color = grayscale_surface.get_at((x, y))
+
+                # Set the color of the pixel in the one-bit surface based on the grayscale value
+                if color.r < 128:
+                    onebit_surface.set_at((x, y), p.Color('black'))
+                else:
+                    onebit_surface.set_at((x, y), p.Color('white'))
+
+        return onebit_surface
 
 
     def draw_text(self, text, x, y, col = COLOR): # Function to draw label/text
@@ -237,19 +323,32 @@ class PygameTools:
         self.screen.blit(qr_img, (30,100))
 
 
-    def draw_edit_img(self):
+    def draw_img_in(self, position=(630,100)):
+        try:
+            self.image_in = self.img_load(self.image_input_path)
+            original_width, original_height = self.image_in.get_size()
+            self.screen.blit(self.image_in, position)
+            ##self.screen.blit(p.transform.scale(image_edit, (current_width, current_height)), (window_width/2+100, y0))
+        except Exception as e:
+            print(f"draw_img_in Err: {e}")
+    
+
+    def draw_img_edit(self):
         # draw_text(f"icon {icon_w}x{icon_h} | {image_path}",x0, y0 -30, SILVER2)
         # window.fill((255, 255, 255))  # Clear the window content
                 
         try:
-            self.image_in = self.img_load(self.image_input_path)
-            original_width, original_height = self.image_in.get_size()
-            current_width, current_height = original_width * self.resize, original_height * self.resize
+            #original_width, original_height = self.image_in.get_size()
+            #current_width, current_height = original_width * self.resize, original_height * self.resize
             
             self.image_out = self.img_to_gray(self.image_in) # image edit
-            self.image_out = p.transform.scale(self.image_out , (current_width, current_height))
-
-            self.screen.blit(self.image_in, (630,100))
+            ##self.image_out = self.img_add_noise(self.image_in, 32)
+            ###self.image_out = self.img_to_onebit(self.image_in)
+            #self.image_out = self.img_reduce(self.image_in,(0,0,255))
+            #self.image_out = p.transform.scale(self.image_out , (current_width, current_height))
+            self.image_out = self.img_matrix(self.image_in,self.alpha,(32,32),(320,320))    
+    
+            #self.screen.blit(self.image_in, (630,100))
             self.screen.blit(self.image_out, (390,100))
 
             #image_nbit = self.image_in.convert(16)
@@ -258,7 +357,7 @@ class PygameTools:
     
             ##self.screen.blit(p.transform.scale(image_edit, (current_width, current_height)), (window_width/2+100, y0))
         except Exception as e:
-            print(f"draw_edit_img Err: {e}")
+            print(f"draw_img_edit Err: {e}")
     
 
     def draw_layer_back(self):
@@ -288,7 +387,8 @@ class PygameTools:
     def draw_layer_main(self):
         self.draw_input_field()
         if self.drawedit:
-            self.draw_edit_img() 
+            self.draw_img_edit() 
+            #self.draw_img_in()
         if self.drawqr:
             self.draw_qr()
         self.draw_text(self.label,10,20)
@@ -339,7 +439,7 @@ class PygameTools:
                         self.img_save(self.image_out)
                     
                     elif event.key == p.K_n and p.key.get_mods() & p.KMOD_CTRL:
-                        img_noise()
+                        self.image_out = self.img_add_noise(self.image_in)
 
                     elif event.key == p.K_z and p.key.get_mods() & p.KMOD_CTRL:
                         self.resize +=.5
@@ -401,10 +501,10 @@ class PygameTools:
             if self.alpha>255:
                 self.alpha = 128
                 #sleep(1)
-                if self.matrix_ai_face:
+                if self.drawmatrix:
                     self.draw_matrix_img(True)
             else:
-                if self.matrix_ai_face:
+                if self.drawmatrix:
                     self.draw_matrix_img()
             if self.drawsvg:
                 self.svgx +=2
