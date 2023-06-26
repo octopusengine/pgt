@@ -15,8 +15,8 @@ pe.external_test()
 
 # pt.matrix_ai_face = False
 load_img = pt.img_load(pt.image_input_path)
-test_img = pt.img_to_gray(load_img)
-matrix_img = pt.img_matrix(test_img, alpha=128, size_mx=(32,32),size_out=(32,32))
+#x test_img = pt.img_to_gray(load_img)
+matrix_img = pt.img_matrix(load_img, alpha=128, size_mx=(32,32),size_out=(32,32))
 s =pt.img_data(matrix_img) # RGB 32x32 3072 / 1024 3B/px = 24 bit
 print(s[0:32])
 ## pt.set_background_img()
@@ -25,12 +25,12 @@ print(s[0:32])
 x, y = 0, 0
 pixel_color = matrix_img.get_at((x, y))
 print(pixel_color)
-matrix_img.set_at((x,y),(12,13,15,32))
+matrix_img.set_at((x,y),(0,1,1,100))
 pixel_color = matrix_img.get_at((x, y))
 print(pixel_color)
 
 print("-"*39)
-
+"""
 image = matrix_img
 #image_8bit = pt.p.Surface(image.get_size(), pt.p.SRCALPHA, 8)
 #image_8bit.blit(image, (0, 0))
@@ -38,3 +38,15 @@ image_8bit = image.convert()
 pt.img_save(image_8bit)
 
 s = pt.img_data(image_8bit) # RGB 32x32 3072 / 1024 3B/px = 24 bit
+"""
+matrix_img = pt.img_reduce(matrix_img)
+pixel_color = matrix_img.get_at((x, y))
+print(pixel_color)
+
+matrix_img.set_at((x,y),(5,251,6,100))
+pixel_color = matrix_img.get_at((x, y))
+print(pixel_color)
+
+matrix_img = pt.img_reduce(matrix_img)
+pixel_color = matrix_img.get_at((x, y))
+print(pixel_color)
