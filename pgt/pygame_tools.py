@@ -3,16 +3,14 @@
 import pygame as p
 import os, random
 from time import sleep
-#from svglib.svglib import svg2rlg
-#from reportlab.graphics import renderPM
 import cairosvg
 import qrcode
 from io import BytesIO
 
-__version__ = "0.0.8"
+__version__ = "0.0.9"
 
 """
-
+pygame tools - for experimentation, testing and fun
 """
 
 # basic colors
@@ -23,14 +21,17 @@ BLACK2 = (10, 10, 10)
 BLACK = (0, 0, 0)
 COLOR = (0, 196, 0)
 COLOR2 = (0, 128, 0)
+RED = (255,0,0)
+BLUE = (0,0,255)
 
 
 
 class PygameTools:
-    def __init__(self, window_width=640, window_height=480):
+    def __init__(self, window_width=640, window_height=480, mode = 1):
         self.p = p
         self.width = window_width
         self.height = window_height
+        self.mode = mode
         self.screen = p.display.set_mode((window_width, window_height))
         self.clock = p.time.Clock()
         self.timer = False
@@ -157,13 +158,21 @@ class PygameTools:
                 img_surface.set_at((x, y), (r, g, b))
 
         return img_surface
-    
 
-    def img_reduce(self, image, red_col = (252,252,252)):
-        # Load the image
-        img_surface = image # p.image.load(image).convert_alpha()
 
-        # Get the width and height of the image
+    def img_fill(self, img_surface, col=(128,128,128,255)):
+        width = img_surface.get_width()
+        height = img_surface.get_height()
+
+        # Iterate over each pixel in the image
+        for x in range(width):
+            for y in range(height):
+                img_surface.set_at((x, y), (col))
+
+        return img_surface
+
+
+    def img_reduce(self, img_surface, red_col_min = (2,2,2), red_col_max = (252,252,252)):
         width = img_surface.get_width()
         height = img_surface.get_height()
 
@@ -172,13 +181,12 @@ class PygameTools:
             for y in range(height):
                 # Get the pixel color at (x, y)
                 color = img_surface.get_at((x, y))
-                #b = min(255, max(0, color.b + random.randint(-intensity, intensity)))
                 r, g, b, a  = color
-                if r > red_col[0]: r = red_col[0]
-                if g > red_col[1]: g = red_col[1]
-                if b > red_col[2]: b = red_col[2]
-                
-                img_surface.set_at((x, y), (r, g, b))
+      
+                r = max(min(r, red_col_max[0]), red_col_min[0])
+                g = max(min(g, red_col_max[1]), red_col_min[1])
+                b = max(min(b, red_col_max[2]), red_col_min[2])
+                img_surface.set_at((x, y), (r, g, b, a))
 
         return img_surface
 
@@ -349,9 +357,11 @@ class PygameTools:
             #x self.image_out = self.img_to_gray(self.image_in) # image edit
             self.image_out = self.img_add_noise(self.image_in, 32)
             ###self.image_out = self.img_to_onebit(self.image_in)
-            #self.image_out = self.img_reduce(self.image_in,(0,0,255))
+            ##self.image_out = self.img_reduce(self.image_in,(0,0,255))
+            self.image_out = self.img_fill(self.image_in,(0,128,0,255))
+            
             #self.image_out = p.transform.scale(self.image_out , (current_width, current_height))
-            self.image_out = self.img_matrix(self.image_in,self.alpha,(32,32),(320,320))    
+            ##self.image_out = self.img_matrix(self.image_in,self.alpha,(32,32),(320,320))    
     
             #self.screen.blit(self.image_in, (630,100))
             self.screen.blit(self.image_out, (390,100))
