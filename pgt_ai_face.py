@@ -5,6 +5,7 @@ from pgt.pygame_tools import PygameTools
 pt = PygameTools(390, 520) #980
 pt.drawmatrix = True
 pt.drawedit = True
+pt.drawsvg = True
 path = "img_ai"
 img_name = "wai1_1"
 pt.image_input_path = f"{path}/{img_name}.png"
@@ -15,4 +16,5 @@ pt.head = "AI face"
 #pt.img_load(pt.image_input_path)
 pt.set_background_img()
 pt.import_images()
+pt.alpha = 196
 pt.run()
