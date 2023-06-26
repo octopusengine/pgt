@@ -172,7 +172,7 @@ class PygameTools:
         return img_surface
 
 
-    def img_reduce(self, img_surface, red_col_min = (2,2,2), red_col_max = (252,252,252)):
+    def img_reduce(self, img_surface, red_col_min = (2,2,2), red_col_max = (252,252,252), even = True):
         width = img_surface.get_width()
         height = img_surface.get_height()
 
@@ -182,6 +182,11 @@ class PygameTools:
                 # Get the pixel color at (x, y)
                 color = img_surface.get_at((x, y))
                 r, g, b, a  = color
+
+                if even:
+                    if r % 2 != 0: r += 1
+                    if g % 2 != 0: g += 1
+                    if b % 2 != 0: b += 1
       
                 r = max(min(r, red_col_max[0]), red_col_min[0])
                 g = max(min(g, red_col_max[1]), red_col_min[1])
@@ -357,8 +362,8 @@ class PygameTools:
             #x self.image_out = self.img_to_gray(self.image_in) # image edit
             self.image_out = self.img_add_noise(self.image_in, 32)
             ###self.image_out = self.img_to_onebit(self.image_in)
-            ##self.image_out = self.img_reduce(self.image_in,(0,0,255))
-            self.image_out = self.img_fill(self.image_in,(0,128,0,255))
+            self.image_out = self.img_reduce(self.image_in,(0,0,252))
+            ##self.image_out = self.img_fill(self.image_in,(0,128,0,255))
             
             #self.image_out = p.transform.scale(self.image_out , (current_width, current_height))
             ##self.image_out = self.img_matrix(self.image_in,self.alpha,(32,32),(320,320))    
