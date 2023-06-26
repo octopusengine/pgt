@@ -1,6 +1,6 @@
 # pgt
 
-pygame tools - experimental and testing
+pygame tools - for experimentation, testing and fun
 
 ---
 
