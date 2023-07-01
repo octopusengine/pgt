@@ -2,6 +2,7 @@ from pgt.pygame_tools import PygameTools
 from crypto_agama.agama_image_tools import print_rgb, infilt_patt, parse_patt                       # v: "0.2.5"
 from crypto_agama.agama_transform_tools import str_to_hex, hex_to_bin, bin_to_str,bin_normalize8    # v: "0.3.2"
 
+__version__ = "0.0.3"
 
 DEBUG = False
 """
@@ -50,17 +51,17 @@ def img_mx_red(pt, path,path_out,image_name,noise=True,save=True,s_mx=(32,32),s_
     return matrix_red
 
 
-def img_infilt(pt,path_out,image_name,matrix_red,txt_inf,save=True,s_mx=(32,32)):
+def img_infilt(pt,path_out,image_name,matrix_red,txt_inf,save=True,s_mx=(32,32),ch_="R"):
     pattern = hex_to_bin(str_to_hex(txt_inf),to_string=True)
     #matrix_new = infilt_patt(matrix_red,pattern,ch="B")
-    matrix_new = infilt_patt(matrix_red,pattern)
+    matrix_new = infilt_patt(matrix_red,pattern,ch=ch_)
     if save:
         pt.img_save(matrix_new,f"{path_out}/{image_name}mx{int(s_mx[0])}data.png") # infilt
     return matrix_new
 
 
-def img_parse(matrix_new,len_bit_patt=300):
-    pp = bin_normalize8(parse_patt(matrix_new,len_bit_patt))
+def img_parse(matrix_new,len_bit_patt=300,ch_="R"):
+    pp = bin_normalize8(parse_patt(matrix_new,len_bit_patt,ch=ch_))
     #print("parse_patt", "*"*12)
     if DEBUG: print(pp, " > ",len(pp), " /8 > ",len(pp)/8)
     txt = bin_to_str(pp)
