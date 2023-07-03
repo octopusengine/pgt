@@ -316,6 +316,16 @@ class PygameTools:
         ARGB_PREMULT, 32-bit image with colors scaled by alpha channel, alpha channel first
     """
      
+    def img_info(self, img):        
+        width, height = img.get_size()
+        flags = img.get_flags()
+        color_format = p.display.get_surface().get_flags()
+
+        depth = img.get_bitsize()
+        print("image_info:"f"({width}x{height})")
+        print("flags:",flags)
+        print("bit size:",depth)
+    
 
     def img_save(self, image, save_path="images/temp.png"):
         print(save_path)
@@ -349,7 +359,14 @@ class PygameTools:
             ##self.screen.blit(p.transform.scale(image_edit, (current_width, current_height)), (window_width/2+100, y0))
         except Exception as e:
             print(f"draw_img_in Err: {e}")
+
     
+    def draw_img(self, img, position=(30,100)):                      
+        try:
+            self.screen.blit(img, position)
+        except Exception as e:
+            print(f"draw_img Err: {e}")
+
 
     def draw_img_edit(self):
         # draw_text(f"icon {icon_w}x{icon_h} | {image_path}",x0, y0 -30, SILVER2)
