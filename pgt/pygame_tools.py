@@ -7,7 +7,7 @@ import cairosvg
 import qrcode
 from io import BytesIO
 
-__version__ = "0.0.9"
+__version__ = "0.1.0"
 
 """
 pygame tools - for experimentation, testing and fun
@@ -51,11 +51,18 @@ class PygameTools:
         self.image_out = None   # edited   / second
         self.delay = 0.01
         self.drawmatrix = False
+        self.drawinput = False
+        self.drawin_pos = (630,100)
+        self.drawoutput = False
+        self.drawout_pos = (630,100)
         self.drawedit = False
         self.drawsvg = False
         self.drawqr = False
         self.qrdata = "octopusengine test"
         self.svgx = 0
+        self.filt_noise = False
+        self.filt_onebit = False
+        self.filt_reduce = False
 
         self.mouse_button_pressed = False
         p.init()
@@ -351,11 +358,11 @@ class PygameTools:
         self.screen.blit(qr_img, (30,100))
 
 
-    def draw_img_in(self, position=(630,100)):
+    def draw_img_in(self):
         try:
             self.image_in = self.img_load(self.image_input_path)
             original_width, original_height = self.image_in.get_size()
-            self.screen.blit(self.image_in, position)
+            self.screen.blit(self.image_in, self.drawin_pos)
             ##self.screen.blit(p.transform.scale(image_edit, (current_width, current_height)), (window_width/2+100, y0))
         except Exception as e:
             print(f"draw_img_in Err: {e}")
@@ -377,9 +384,13 @@ class PygameTools:
             #current_width, current_height = original_width * self.resize, original_height * self.resize
             
             #x self.image_out = self.img_to_gray(self.image_in) # image edit
-            self.image_out = self.img_add_noise(self.image_in, 32)
-            ###self.image_out = self.img_to_onebit(self.image_in)
-            self.image_out = self.img_reduce(self.image_in,(0,0,252))
+            if self.filt_noise:
+                self.image_out = self.img_add_noise(self.image_in, 32)
+            if self.filt_onebit:
+                self.image_out = self.img_to_onebit(self.image_in)
+            if self.filt_reduce:
+                self.image_out = self.img_reduce(self.image_in,(0,0,252))
+            
             ##self.image_out = self.img_fill(self.image_in,(0,128,0,255))
             
             #self.image_out = p.transform.scale(self.image_out , (current_width, current_height))
@@ -425,9 +436,19 @@ class PygameTools:
 
     def draw_layer_main(self):
         self.draw_input_field()
+
+        if self.drawinput: 
+            #self.draw_img_in(position=self.drawin_pos)
+            self.draw_img_in()    
+        if self.drawedit:
+            self.draw_img_edit() 
+        if self.drawqr:
+            self.draw_qr()
+        """
         if self.drawedit:
             self.draw_img_edit() 
             self.draw_img_in()
+        """
         if self.drawqr:
             self.draw_qr()
         self.draw_text(self.label,10,20)
