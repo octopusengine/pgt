@@ -2,13 +2,14 @@
 
 import os, random
 import pygame as p
+import pygame.camera as cam
 from PIL import Image # convert_pil2pg
 from time import sleep
 import cairosvg
 import qrcode
 from io import BytesIO
 
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 
 """
 pygame tools - for experimentation, testing and fun
@@ -61,9 +62,13 @@ class PygameTools:
         self.drawqr = False
         self.qrdata = "octopusengine test"
         self.svgx = 0
+        self.filt_matrix = False
         self.filt_noise = False
         self.filt_onebit = False
         self.filt_reduce = False
+        self.drawcam = False
+        self.camera = None
+        self.cam_pos = (30,100)
 
         self.mouse_button_pressed = False
         p.init()
@@ -77,7 +82,7 @@ class PygameTools:
         #self.font = p.font.SysFont("Arial", font_size)
         #font = p.font.SysFont(None, font_size) #Arial
 
-
+        
     def print_info(self):
         print("ver.", p.ver)
         print(f"window setup: {self.width}x{self.height}")
@@ -100,6 +105,13 @@ class PygameTools:
         pil_image = pil_image.convert('RGB')
         pygame_surface = p.image.frombuffer(pil_image.tobytes(), pil_image.size, 'RGB')
         return pygame_surface
+
+
+    def camera_init(self):
+        print("camera init")
+        cam.init()
+        self.camera = cam.Camera(cam.list_cameras()[0])
+        self.camera.start()
 
 
     def render_qrcode(self,data = "",box=10):
@@ -451,6 +463,16 @@ class PygameTools:
         self.image_mx = self.img_matrix(self.image_mx,self.alpha,(32,32),(320,320))    
         self.screen.blit(self.image_mx, (35,100))
     
+    def draw_camera(self):
+        image_cam = self.camera.get_image()
+        if self.filt_matrix:
+            image_cam = self.img_matrix(image_cam)
+        if self.filt_noise:
+            image_cam = self.img_add_noise(image_cam,20)
+        self.screen.blit(image_cam, self.cam_pos)
+        p.display.flip()
+
+        
 
     def draw_layer_main(self):
         self.draw_input_field()
@@ -471,6 +493,9 @@ class PygameTools:
         """
         if self.drawqr:
             self.draw_qr()
+        if self.drawcam:
+            self.draw_camera()
+
         self.draw_text(self.label,10,20)
         self.draw_text2(self.head,self.width/2,20)
         self.draw_status()
