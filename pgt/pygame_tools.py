@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import pygame as p
 import os, random
+import pygame as p
+from PIL import Image # convert_pil2pg
 from time import sleep
 import cairosvg
 import qrcode
@@ -92,6 +93,13 @@ class PygameTools:
         self.files = [file for file in os.listdir(self.images_source) if file.endswith(".png")]
         sorted_files = sorted(self.files)
         print(sorted_files)
+
+
+    def convert_pil2pg(self,pil_image):
+        #pil_image = Image.open('image.png')
+        pil_image = pil_image.convert('RGB')
+        pygame_surface = p.image.frombuffer(pil_image.tobytes(), pil_image.size, 'RGB')
+        return pygame_surface
 
 
     def render_qrcode(self,data = "",box=10):
@@ -368,6 +376,16 @@ class PygameTools:
             print(f"draw_img_in Err: {e}")
 
     
+    def draw_img_out(self):
+        try:
+            self.image_out = self.img_load(self.image_output_path)
+            original_width, original_height = self.image_out.get_size()
+            self.screen.blit(self.image_out, self.drawout_pos)
+            ##self.screen.blit(p.transform.scale(image_edit, (current_width, current_height)), (window_width/2+100, y0))
+        except Exception as e:
+            print(f"draw_img_out Err: {e}")
+
+
     def draw_img(self, img, position=(30,100)):                      
         try:
             self.screen.blit(img, position)
@@ -439,7 +457,9 @@ class PygameTools:
 
         if self.drawinput: 
             #self.draw_img_in(position=self.drawin_pos)
-            self.draw_img_in()    
+            self.draw_img_in()
+        if self.drawoutput: 
+            self.draw_img_out()
         if self.drawedit:
             self.draw_img_edit() 
         if self.drawqr:
