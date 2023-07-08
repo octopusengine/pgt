@@ -8,7 +8,7 @@ image_path = "img_test" #"img_ai"
 #input_image = "wai2.png"
 img_name ="64x"
 
-pt = PygameTools(320, 620) #980
+pt = PygameTools(350, 620) #980
 pi = pt.p
 
 pt.image_input_path = f"{image_path}/{img_name}.png"
@@ -19,6 +19,7 @@ pt.img_info(img)
 pt.drawin_pos = (100,100)
 pt.drawinput = True
 pt.drawinputfield = True
+pt.drawcheckbox = True
 #pt.drawedit = True
 
 pt.drawoutput = True
