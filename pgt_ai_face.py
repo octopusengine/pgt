@@ -6,6 +6,7 @@ pt = PygameTools(390, 890) #980
 pt.drawmatrix = True
 pt.drawedit = True
 pt.drawsvg = True
+pt.drawinputfield = True
 path = "img_ai"
 img_name = "wai1_1"
 pt.image_input_path = f"{path}/{img_name}.png"
