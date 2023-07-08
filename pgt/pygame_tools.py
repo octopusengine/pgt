@@ -52,6 +52,7 @@ class PygameTools:
         self.image_in = None    # original / first
         self.image_out = None   # edited   / second
         self.delay = 0.01
+        self.drawinputfield = False
         self.drawmatrix = False
         self.drawinput = False
         self.drawin_pos = (630,100)
@@ -474,8 +475,8 @@ class PygameTools:
 
 
     def draw_layer_main(self):
-        self.draw_input_field()
-
+        if self.drawinputfield:
+            self.draw_input_field()
         if self.drawinput: 
             #self.draw_img_in(position=self.drawin_pos)
             self.draw_img_in()
@@ -591,6 +592,8 @@ class PygameTools:
                             img_name = self.input_text
                             print(self.input_text)
                             self.status = self.input_text
+                            if self.drawqr:
+                                self.qrdata = self.input_text
 
                             self.input_text = ""
                     elif event.key == p.K_BACKSPACE:
