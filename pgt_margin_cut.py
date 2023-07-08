@@ -18,14 +18,15 @@ pt.img_info(img)
 
 pt.drawin_pos = (100,100)
 pt.drawinput = True
+pt.drawinputfield = True
 #pt.drawedit = True
 
 pt.drawoutput = True
 pt.drawout_pos = (100,300)
 
 #cut_image(image_path,"punk5x3",m=5,n=3)
-#cut_image(image_path,"punk16a",m=4,n=4)
 
+#pil_image = margin_cut_image(image_path,img_name,mx=10,mx2=5,my=10,my2=3,save=True)
 pil_image = margin_cut_image(image_path,img_name,mx=10,save=True)
 pygame_surface = pt.convert_pil2pg(pil_image)
 
