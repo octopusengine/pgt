@@ -9,7 +9,7 @@ import cairosvg
 import qrcode
 from io import BytesIO
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 """
 pygame tools - for experimentation, testing and fun
@@ -207,17 +207,17 @@ class PygameTools:
         for x in range(width):
             for y in range(height):
                 # Get the pixel color at (x, y)
-                color = img_surface.get_at((x, y))
-                r, g, b, a  = color
+                r, g, b, a = img_surface.get_at((x, y)) # color
+
+                r = max(min(r, red_col_max[0]), red_col_min[0])
+                g = max(min(g, red_col_max[1]), red_col_min[1])
+                b = max(min(b, red_col_max[2]), red_col_min[2])
 
                 if even:
                     if r % 2 != 0: r += 1
                     if g % 2 != 0: g += 1
                     if b % 2 != 0: b += 1
-      
-                r = max(min(r, red_col_max[0]), red_col_min[0])
-                g = max(min(g, red_col_max[1]), red_col_min[1])
-                b = max(min(b, red_col_max[2]), red_col_min[2])
+
                 img_surface.set_at((x, y), (r, g, b, a))
 
         return img_surface
@@ -470,9 +470,8 @@ class PygameTools:
         if self.filt_noise:
             image_cam = self.img_add_noise(image_cam,20)
         self.screen.blit(image_cam, self.cam_pos)
-        p.display.flip()
+        #p.display.flip()
 
-        
 
     def draw_layer_main(self):
         self.draw_input_field()
@@ -501,7 +500,10 @@ class PygameTools:
         self.draw_status()
                             
 
-    def run(self):
+    def run(self,delay=0):
+        if delay > 0:
+            self.delay = delay
+            self.timer = False
         running = True
         while running:
             for event in p.event.get():
