@@ -9,7 +9,7 @@ import cairosvg
 import qrcode
 from io import BytesIO
 
-__version__ = "0.1.3"
+__version__ = "0.1.5"
 
 """
 pygame tools - for experimentation, testing and fun
@@ -21,12 +21,14 @@ SILVER = (64, 64, 64)
 SILVER2 = (128, 128, 128)
 BLACK2 = (10, 10, 10)
 BLACK = (0, 0, 0)
-COLOR = (0, 196, 0)
+GREEN = (0, 196, 0)
+COLOR = GREEN
 COLOR2 = (0, 128, 0)
 RED = (255,0,0)
 BLUE = (0,0,255)
-
-
+ORANGE = (255,165,0)
+DARKORANGE = (255,140,0)
+CHECKSIZE = 30
 
 class PygameTools:
     def __init__(self, window_width=640, window_height=480, mode = 1):
@@ -44,6 +46,12 @@ class PygameTools:
         self.head = "test head"
         self.status = "status line"
         self.input_text = ""
+        self.checkbox1 = False
+        self.checkbox2 = False
+        self.checkbox3 = False
+        self.label_ch1 = "filter 1"
+        self.label_ch2 = "filter 2"
+        self.label_ch3 = "filter 3"
         self.image_input_path = ""
         self.image_output_path = ""
         self.images_source = "images_source"
@@ -53,6 +61,7 @@ class PygameTools:
         self.image_out = None   # edited   / second
         self.delay = 0.01
         self.drawinputfield = False
+        self.drawinfield_pos = (30,450)
         self.drawmatrix = False
         self.drawinput = False
         self.drawin_pos = (630,100)
@@ -61,6 +70,10 @@ class PygameTools:
         self.drawedit = False
         self.drawsvg = False
         self.drawqr = False
+        self.drawcheckbox = False
+        self.ch1_pos = (30,500)
+        self.ch2_pos = (30,540)
+        self.ch3_pos = (30,580)
         self.qrdata = "octopusengine test"
         self.svgx = 0
         self.filt_matrix = False
@@ -292,6 +305,23 @@ class PygameTools:
 
         return onebit_surface
 
+    def draw_checkbox(self):
+        p.draw.rect(self.screen, COLOR, (self.ch1_pos[0],self.ch1_pos[1], CHECKSIZE, CHECKSIZE), 2)
+        p.draw.rect(self.screen, COLOR, (self.ch2_pos[0],self.ch2_pos[1], CHECKSIZE, CHECKSIZE), 2)
+        p.draw.rect(self.screen, COLOR, (self.ch3_pos[0],self.ch3_pos[1], CHECKSIZE, CHECKSIZE), 2)
+
+        if self.checkbox1:
+            p.draw.rect(self.screen, COLOR2, (self.ch1_pos[0] + 2, self.ch1_pos[1] + 2, CHECKSIZE-4, CHECKSIZE-4))
+        if self.checkbox2:
+            p.draw.rect(self.screen, COLOR2, (self.ch2_pos[0] + 2, self.ch2_pos[1] + 2, CHECKSIZE-4, CHECKSIZE-4))
+        if self.checkbox3:
+            p.draw.rect(self.screen, COLOR2, (self.ch3_pos[0] + 2, self.ch3_pos[1] + 2, CHECKSIZE-4, CHECKSIZE-4))
+
+        #labels
+        self.draw_text(self.label_ch1, self.ch1_pos[0]+CHECKSIZE+5,self.ch1_pos[1])
+        self.draw_text(self.label_ch2, self.ch2_pos[0]+CHECKSIZE+5,self.ch2_pos[1])
+        self.draw_text(self.label_ch3, self.ch3_pos[0]+CHECKSIZE+5,self.ch3_pos[1])
+
 
     def draw_text(self, text, x, y, col = COLOR): # Function to draw label/text
         text_surface = self.font.render(text, True, col)
@@ -365,13 +395,14 @@ class PygameTools:
         
 
     def draw_input_field(self):
-        a = 15
-        xi, yi =10, self.height - 3 * a
+        a = 18
+        #xi, yi =10, self.height - 3 * a
+        xi, yi = self.drawinfield_pos
         self.draw_text("New filename:",xi, yi, COLOR2)
-        p.draw.rect(self.screen, SILVER, (xi, yi, 200, a*2))
-        p.draw.rect(self.screen, BLACK2, (xi, yi, 200, a*2), 2)
+        p.draw.rect(self.screen, SILVER, (xi, yi, 310, a*2))
+        p.draw.rect(self.screen, BLACK2, (xi, yi, 310, a*2), 2)
         text_surface = self.font.render(self.input_text, True, COLOR)
-        self.screen.blit(text_surface, (xi+5, yi-3))
+        self.screen.blit(text_surface, (xi+5, yi+2))
 
 
     def draw_qr(self):
@@ -467,7 +498,7 @@ class PygameTools:
     def draw_camera(self):
         image_cam = self.camera.get_image()
         if self.filt_matrix:
-            image_cam = self.img_matrix(image_cam)
+            image_cam = self.img_matrix(image_cam,size_mx=(32,24),size_out=(320,256))
         if self.filt_noise:
             image_cam = self.img_add_noise(image_cam,20)
         self.screen.blit(image_cam, self.cam_pos)
@@ -480,6 +511,8 @@ class PygameTools:
         if self.drawinput: 
             #self.draw_img_in(position=self.drawin_pos)
             self.draw_img_in()
+        if self.drawcheckbox:
+            self.draw_checkbox()
         if self.drawoutput: 
             self.draw_img_out()
         if self.drawedit:
@@ -527,6 +560,17 @@ class PygameTools:
                         self.mouse_button_pressed = True
                         mouse_x, mouse_y = event.pos
                         #self.status = (f"x:{mouse_x}  |  y:{mouse_y}")
+                        if self.ch1_pos[0] <= mouse_x <= self.ch1_pos[0] + CHECKSIZE and self.ch1_pos[1] <= mouse_y <= self.ch1_pos[1] + CHECKSIZE:
+                            self.checkbox1 = not self.checkbox1
+                            #self.filt_matrix = self.checkbox3
+                            print("checkbox1",self.checkbox1)
+                        if self.ch2_pos[0] <= mouse_x <= self.ch2_pos[0] + CHECKSIZE and self.ch2_pos[1] <= mouse_y <= self.ch2_pos[1] + CHECKSIZE:
+                            self.checkbox2 = not self.checkbox2
+                            self.filt_noise = self.checkbox2
+                            print("checkbox2",self.checkbox2)
+                        if self.ch3_pos[0] <= mouse_x <= self.ch3_pos[0] + CHECKSIZE and self.ch3_pos[1] <= mouse_y <= self.ch3_pos[1] + CHECKSIZE:
+                            self.checkbox3 = not self.checkbox3
+                            print("checkbox3",self.checkbox3)
 
                     elif event.button == 3:  # Right mouse button
                         # Get the click coordinates
