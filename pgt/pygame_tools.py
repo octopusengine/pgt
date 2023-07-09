@@ -9,7 +9,7 @@ import cairosvg
 import qrcode
 from io import BytesIO
 
-__version__ = "0.1.5"
+__version__ = "0.1.6"
 
 """
 pygame tools - for experimentation, testing and fun
@@ -28,6 +28,8 @@ RED = (255,0,0)
 BLUE = (0,0,255)
 ORANGE = (255,165,0)
 DARKORANGE = (255,140,0)
+
+X0 = 30
 CHECKSIZE = 30
 
 class PygameTools:
@@ -40,6 +42,7 @@ class PygameTools:
         self.clock = p.time.Clock()
         self.timer = False
         self.background_image = None
+        self.background_alpha = 128
         self.resize = 1
         self.alpha = 128
         self.label = "label"
@@ -71,10 +74,11 @@ class PygameTools:
         self.drawsvg = False
         self.drawqr = False
         self.drawcheckbox = False
-        self.ch1_pos = (30,500)
-        self.ch2_pos = (30,540)
-        self.ch3_pos = (30,580)
+        self.ch1_pos = (X0,500)
+        self.ch2_pos = (X0,540)
+        self.ch3_pos = (X0,580)
         self.qrdata = "octopusengine test"
+        self.qr_pos = (X0,100)
         self.svgx = 0
         self.filt_matrix = False
         self.filt_noise = False
@@ -82,7 +86,7 @@ class PygameTools:
         self.filt_reduce = False
         self.drawcam = False
         self.camera = None
-        self.cam_pos = (30,100)
+        self.cam_pos = (X0,100)
 
         self.mouse_button_pressed = False
         p.init()
@@ -305,6 +309,7 @@ class PygameTools:
 
         return onebit_surface
 
+
     def draw_checkbox(self):
         p.draw.rect(self.screen, COLOR, (self.ch1_pos[0],self.ch1_pos[1], CHECKSIZE, CHECKSIZE), 2)
         p.draw.rect(self.screen, COLOR, (self.ch2_pos[0],self.ch2_pos[1], CHECKSIZE, CHECKSIZE), 2)
@@ -407,7 +412,7 @@ class PygameTools:
 
     def draw_qr(self):
         qr_img = self.render_qrcode()
-        self.screen.blit(qr_img, (30,100))
+        self.screen.blit(qr_img, self.qr_pos)
 
 
     def draw_img_in(self):
@@ -475,7 +480,7 @@ class PygameTools:
         if self.background_image:
             self.screen.blit(self.background_image, (0, 0))
                 #p.draw.rect(self.screen, BLACK, (0, 0, self.width, 390))
-        opacity_over_bg=128
+        opacity_over_bg = self.background_alpha
         rect_surface = p.Surface((self.width, 390), p.SRCALPHA)
         rect_surface.fill((0, 0, 0, opacity_over_bg))  # Set the fill color with opacity
         self.screen.blit(rect_surface, (0, 0))
@@ -494,7 +499,8 @@ class PygameTools:
         self.image_mx = self.img_add_noise(self.image_in, 32)
         self.image_mx = self.img_matrix(self.image_mx,self.alpha,(32,32),(320,320))    
         self.screen.blit(self.image_mx, (35,100))
-    
+
+
     def draw_camera(self):
         image_cam = self.camera.get_image()
         if self.filt_matrix:
@@ -524,8 +530,6 @@ class PygameTools:
             self.draw_img_edit() 
             self.draw_img_in()
         """
-        if self.drawqr:
-            self.draw_qr()
         if self.drawcam:
             self.draw_camera()
 
